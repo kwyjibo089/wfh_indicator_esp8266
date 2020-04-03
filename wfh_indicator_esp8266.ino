@@ -83,7 +83,7 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  delay(500);
+  delay(2000);
   analogWrite(G_PIN, 0);
 }
 
@@ -134,6 +134,14 @@ void handleNewMessages(int numNewMessages) {
       welcome += "This is Chat Action Bot example.\n\n";
       welcome += "/send_test_action : to send test chat action message\n";
       bot.sendMessage(chat_id, welcome);
+    }
+
+    if (text == "/red") {
+      bot.sendChatAction(chat_id, "typing");
+      delay(500);
+      analogWrite(R_PIN, 1023);
+      delay(4000);
+      analogWrite(R_PIN, 0);
     }
   }
 }
