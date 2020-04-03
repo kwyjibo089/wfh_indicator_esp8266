@@ -1,9 +1,10 @@
-/*******************************************************************
-*  An example of bot that echos back any messages received         *
-*                                                                  *
-*  written by Giacarlo Bacchio (Gianbacchio on Github)             *
-*  adapted by Brian Lough                                          *
-*******************************************************************/
+/******************************************************************************************************************
+*                                                                  
+*                                                                  
+*                                                                  
+* Based on the example sketch on github:                                                                 
+* https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot/blob/master/examples/ESP8266/EchoBot/EchoBot.ino
+*******************************************************************************************************************/
 #include "secrets.h"
 #include <ESP8266WiFi.h>
 #include <WiFiClientSecure.h>
@@ -22,16 +23,34 @@ UniversalTelegramBot bot(BOTtoken, client);
 int Bot_mtbs = 1000; //mean time between scan messages
 long Bot_lasttime;   //last time messages' scan has been done
 
-void setup() {
-  Serial.begin(115200);
+const int  R_PIN = D8;
+const int  G_PIN = D7;
+const int  B_PIN = D6;
+
+const int MIN_ANALOG = 1023;
+const int MAX_ANALOG = 0;
+const int MIN_COLOR  = 0;
+const int MAX_COLOR  = 255;
   
-  client.setInsecure();  // TLS problem
+void setup() {
+  
+  Serial.begin(115200);
+
+  pinMode(R_PIN, OUTPUT);
+  pinMode(G_PIN, OUTPUT);
+  pinMode(B_PIN, OUTPUT);
+  
+  analogWrite(R_PIN, 1023);  
+  analogWrite(G_PIN, 0);
+  analogWrite(B_PIN, 0);
   
   // Set WiFi to station mode and disconnect from an AP if it was Previously
   // connected
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
   delay(100);
+
+  client.setInsecure();  // TLS problem
 
   // Attempt to connect to Wifi network:
   Serial.print("Connecting Wifi: ");
@@ -43,6 +62,9 @@ void setup() {
     delay(500);
   }
 
+  analogWrite(R_PIN, 0);  
+  analogWrite(G_PIN, 1023);
+  
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.print("IP address: ");
@@ -51,7 +73,6 @@ void setup() {
 
 void loop() {
   if (millis() > Bot_lasttime + Bot_mtbs)  {
-    Serial.println("scanning for new messages...");
     int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
 
     while(numNewMessages) {
