@@ -36,10 +36,7 @@ const int  D2_RED = D4;
 const int  D2_GREEN = D3;
 const int  D2_BLUE = D2;
 
-const int MIN_ANALOG = 1023;
-const int MAX_ANALOG = 0;
-const int MIN_COLOR  = 0;
-const int MAX_COLOR  = 255;
+const int MAX_ANALOG = 1023;
 
 // for the rainbow effect
 int r = 0;
@@ -58,11 +55,11 @@ void setup() {
   pinMode(D2_GREEN, OUTPUT);
   pinMode(D2_BLUE, OUTPUT);
 
-  analogWrite(D1_RED, 1023);
+  analogWrite(D1_RED, MAX_ANALOG);
   analogWrite(D1_GREEN, 0);
   analogWrite(D1_BLUE, 0);
 
-  analogWrite(D2_RED, 1023);
+  analogWrite(D2_RED, MAX_ANALOG);
   analogWrite(D2_GREEN, 0);
   analogWrite(D2_BLUE, 0);
 
@@ -87,22 +84,22 @@ void setup() {
     Serial.print(".");
 
     if (toggle == true) {
-      analogWrite(D1_BLUE, 1023);
+      analogWrite(D1_BLUE, MAX_ANALOG);
       analogWrite(D2_BLUE, 0);
     }
     else {
       analogWrite(D1_BLUE, 0);
-      analogWrite(D2_BLUE, 1023);
+      analogWrite(D2_BLUE, MAX_ANALOG);
     }
     toggle = !toggle;
 
-    delay(500);
+    delay(100);
   }
 
   analogWrite(D1_BLUE, 0);
-  analogWrite(D1_GREEN, 1023);
+  analogWrite(D1_GREEN, MAX_ANALOG);
   analogWrite(D2_BLUE, 0);
-  analogWrite(D2_GREEN, 1023);
+  analogWrite(D2_GREEN, MAX_ANALOG);
 
   Serial.println("");
   Serial.println("WiFi connected");
@@ -110,8 +107,7 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   delay(2000);
-  analogWrite(D1_GREEN, 0);
-  analogWrite(D2_GREEN, 0);
+  ledsOff();
 }
 
 void loop() {
@@ -119,9 +115,9 @@ void loop() {
     int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
 
     while (numNewMessages) {
-      analogWrite(D1_BLUE, 1023);
-      analogWrite(D2_BLUE, 1023);
-      delay(250);
+      analogWrite(D1_BLUE, MAX_ANALOG);
+      analogWrite(D2_BLUE, MAX_ANALOG);
+      delay(100);
       Serial.println("got response");
       analogWrite(D1_BLUE, 0);
       analogWrite(D2_BLUE, 0);      
@@ -155,15 +151,13 @@ void handleNewMessages(int numNewMessages) {
       String msg = "Received message " + text + " from " + from_name + ".\n";
       bot.sendChatAction(chat_id, "typing");
       bot.sendMessage(chat_id, msg);
-      delay(500);
-      analogWrite(D1_RED, 1023);
+      analogWrite(D1_RED, MAX_ANALOG);
     }
 
     else if (text == "/meetingoff" || text == "/1off") {
       String msg = "Received message " + text + " from " + from_name + ".\n";
       bot.sendChatAction(chat_id, "typing");
       bot.sendMessage(chat_id, msg);
-      delay(500);
       analogWrite(D1_RED, 0);
     }
 
@@ -171,15 +165,13 @@ void handleNewMessages(int numNewMessages) {
       String msg = "Received message " + text + " from " + from_name + ".\n";
       bot.sendChatAction(chat_id, "typing");
       bot.sendMessage(chat_id, msg);
-      delay(500);
-      analogWrite(D2_GREEN, 1023);
+      analogWrite(D2_GREEN, MAX_ANALOG);
     }
 
     else if (text == "/headphonesoff" || text == "/2off") {
       String msg = "Received message " + text + " from " + from_name + ".\n";
       bot.sendChatAction(chat_id, "typing");
       bot.sendMessage(chat_id, msg);
-      delay(500);
       analogWrite(D2_GREEN, 0);
     }
 
@@ -188,14 +180,21 @@ void handleNewMessages(int numNewMessages) {
       String msg = "Received message " + text + " from " + from_name + ".\n";
       bot.sendChatAction(chat_id, "typing");
       bot.sendMessage(chat_id, msg);
-      delay(500);
 
-      setColor(1023, 0, 0);    // red
-      setColor(0, 1023, 0);    // green
-      setColor(0, 0, 1023);    // blue
-      setColor(1023, 1023, 0);  // yellow
+      setColor(MAX_ANALOG, 0, 0);    // red
+      setColor(0, MAX_ANALOG, 0);    // green
+      setColor(0, 0, MAX_ANALOG);    // blue
+      setColor(MAX_ANALOG, MAX_ANALOG, 0);  // yellow
       setColor(320, 0, 320);    // purple
-      setColor(0, 1023, 1023);  // aqua
+      setColor(0, MAX_ANALOG, MAX_ANALOG);  // aqua
+      ledsOff();
+    }
+
+    else if (text == "/off") {
+      String msg = "Received message " + text + " from " + from_name + ".\n";
+      bot.sendChatAction(chat_id, "typing");
+      bot.sendMessage(chat_id, msg);
+      ledsOff();
     }
 
     else {
@@ -203,8 +202,7 @@ void handleNewMessages(int numNewMessages) {
       msg += "Don\'t know what to do...\n";
       bot.sendChatAction(chat_id, "typing");
       bot.sendMessage(chat_id, msg);
-      delay(500);
-      analogWrite(D2_BLUE, 0);
+      ledsOff();
     }
   }  
 }
@@ -219,10 +217,17 @@ void setColor(int red, int green, int blue) {
 
     if ( b < blue ) b += 1;
     if ( b > blue ) b -= 1;
-
+     
     _setColor();
     delay(10);
   }
+}
+
+void ledsOff() {
+  r = 0;
+  g = 0;
+  b = 0;
+  _setColor();
 }
 
 void _setColor() {
