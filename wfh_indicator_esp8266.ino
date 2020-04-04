@@ -24,9 +24,13 @@ UniversalTelegramBot bot(BOTtoken, client);
 int Bot_mtbs = 1000; //mean time between scan messages
 long Bot_lasttime;   //last time messages' scan has been done
 
-const int  R_PIN = D8;
-const int  G_PIN = D7;
-const int  B_PIN = D6;
+const int  D1_RED = D8;
+const int  D1_GREEN = D7;
+const int  D1_BLUE = D6;
+
+const int  D2_RED = D4;
+const int  D2_GREEN = D3;
+const int  D2_BLUE = D2;
 
 const int MIN_ANALOG = 1023;
 const int MAX_ANALOG = 0;
@@ -37,13 +41,21 @@ void setup() {
 
   Serial.begin(115200);
 
-  pinMode(R_PIN, OUTPUT);
-  pinMode(G_PIN, OUTPUT);
-  pinMode(B_PIN, OUTPUT);
+  pinMode(D1_RED, OUTPUT);
+  pinMode(D1_GREEN, OUTPUT);
+  pinMode(D1_BLUE, OUTPUT);
 
-  analogWrite(R_PIN, 1023);
-  analogWrite(G_PIN, 0);
-  analogWrite(B_PIN, 0);
+  pinMode(D2_RED, OUTPUT);
+  pinMode(D2_GREEN, OUTPUT);
+  pinMode(D2_BLUE, OUTPUT);
+
+  analogWrite(D1_RED, 1023);
+  analogWrite(D1_GREEN, 0);
+  analogWrite(D1_BLUE, 0);
+
+  analogWrite(D2_RED, 1023);
+  analogWrite(D2_GREEN, 0);
+  analogWrite(D2_BLUE, 0);
 
   // Set WiFi to station mode and disconnect from an AP if it was Previously
   // connected
@@ -58,25 +70,30 @@ void setup() {
   Serial.println(ssid);
   WiFi.begin(ssid, password);
 
-  analogWrite(R_PIN, 0);
+  analogWrite(D1_RED, 0);
+  analogWrite(D2_RED, 0);
 
   bool toggle = true;
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
 
     if (toggle == true) {
-      analogWrite(B_PIN, 1023);
+      analogWrite(D1_BLUE, 1023);
+      analogWrite(D2_BLUE, 0);
     }
     else {
-      analogWrite(B_PIN, 0);
+      analogWrite(D1_BLUE, 0);
+      analogWrite(D2_BLUE, 1023);
     }
     toggle = !toggle;
 
     delay(500);
   }
 
-  analogWrite(B_PIN, 0);
-  analogWrite(G_PIN, 1023);
+  analogWrite(D1_BLUE, 0);
+  analogWrite(D1_GREEN, 1023);
+  analogWrite(D2_BLUE, 0);
+  analogWrite(D2_GREEN, 1023);
 
   Serial.println("");
   Serial.println("WiFi connected");
@@ -84,7 +101,8 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   delay(2000);
-  analogWrite(G_PIN, 0);
+  analogWrite(D1_GREEN, 0);
+  analogWrite(D2_GREEN, 0);
 }
 
 void loop() {
@@ -129,19 +147,31 @@ void handleNewMessages(int numNewMessages) {
       //more info here - https://core.telegram.org/bots/api#sendchataction
     }
 
-    if (text == "/start") {
+    else if (text == "/start") {
       String welcome = "Welcome to Universal Arduino Telegram Bot library, " + from_name + ".\n";
       welcome += "This is Chat Action Bot example.\n\n";
       welcome += "/send_test_action : to send test chat action message\n";
       bot.sendMessage(chat_id, welcome);
     }
 
-    if (text == "/red") {
+    else if (text == "/red") {
+      String msg = "Received message " + text + " from " + from_name + ".\n";
       bot.sendChatAction(chat_id, "typing");
+      bot.sendMessage(chat_id, msg);
       delay(500);
-      analogWrite(R_PIN, 1023);
+      analogWrite(D1_RED, 1023);
       delay(4000);
-      analogWrite(R_PIN, 0);
+      analogWrite(D1_RED, 0);
+    }
+
+    else if (text == "/blue") {
+      String msg = "Received message " + text + " from " + from_name + ".\n";
+      bot.sendChatAction(chat_id, "typing");
+      bot.sendMessage(chat_id, msg);
+      delay(500);
+      analogWrite(D2_BLUE, 1023);
+      delay(4000);
+      analogWrite(D2_BLUE, 0);
     }
   }
 }
