@@ -1,1 +1,4 @@
 secrets.h
+Arduino/build/
+../build/
+../../.vscode/
