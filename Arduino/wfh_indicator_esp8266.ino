@@ -1,6 +1,9 @@
 /************************************************************************************************************************
   Work from home indicator.
-  Using a NodeMCU with two RGB leds to indicate status on a picture frame.
+  Using a NodeMCU with two RGB leds to indicate status on a picture frame. Status updates via telegram app on smartphone
+  or laptop.
+
+  See http://blog.roman-mueller.ch/index.php/2020/04/05/dad-status-indicator/ for full instructions and hardware needed.
 
   Original idea by Steve Forde (@cairn4)
   https://twitter.com/cairn4/status/1245539977993355265
