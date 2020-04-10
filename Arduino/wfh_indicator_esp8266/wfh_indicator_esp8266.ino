@@ -147,19 +147,18 @@ void loop()
 
   if (millis() > lastWatchDogTime + watchDogTime)
   {
-    if(isIdle)
+    if (isIdle)
     {
       // if it's idle we blink once in 5 sec to prevent powerbank to shut off
       analogWrite(D1_GREEN, MAX_ANALOG);
       analogWrite(D2_BLUE, MAX_ANALOG);
       delay(100);
       analogWrite(D1_GREEN, 0);
-      analogWrite(D2_BLUE, 0);      
+      analogWrite(D2_BLUE, 0);
     }
 
     lastWatchDogTime = millis();
   }
-
 }
 
 void handleNewMessages(int numNewMessages)
@@ -322,6 +321,8 @@ void ledsOff()
   b = 0;
   _setColor();
   isIdle = true;
+  hasHeadPhonesOn = false;
+  isInMeeting = false;
 }
 
 void _setColor()
