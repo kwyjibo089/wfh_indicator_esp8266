@@ -22,7 +22,7 @@ char ssid[] = SECRET_SSID;     // your network SSID (name)
 char password[] = SECRET_PASS; // your network key
 
 // Initialize Telegram BOT
-#define BOTtoken SECRET_BOT_TOKEN  // your Bot Token (Get from Botfather)
+#define BOTtoken SECRET_BOT_TOKEN // your Bot Token (Get from Botfather)
 
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
@@ -30,14 +30,19 @@ UniversalTelegramBot bot(BOTtoken, client);
 int Bot_mtbs = 1000; //mean time between scan messages
 long Bot_lasttime;   //last time messages' scan has been done
 
-// the two rgb leds
-const int  D1_RED = D8;
-const int  D1_GREEN = D7;
-const int  D1_BLUE = D6;
+int watchdogtime = 5000;
+bool isIdle = false;
+bool isInMeeting = false;
+bool hasHeadPhonesOn = false;
 
-const int  D2_RED = D4;
-const int  D2_GREEN = D3;
-const int  D2_BLUE = D2;
+// the two rgb leds
+const int D1_RED = D8;
+const int D1_GREEN = D7;
+const int D1_BLUE = D6;
+
+const int D2_RED = D4;
+const int D2_GREEN = D3;
+const int D2_BLUE = D2;
 
 const int MAX_ANALOG = 1023;
 
@@ -46,7 +51,8 @@ int r = 0;
 int g = 0;
 int b = 0;
 
-void setup() {
+void setup()
+{
 
   Serial.begin(115200);
 
@@ -72,7 +78,7 @@ void setup() {
   WiFi.disconnect();
   delay(100);
 
-  client.setInsecure();  // TLS problem
+  client.setInsecure(); // TLS problem
 
   // Attempt to connect to Wifi network:
   Serial.print("Connecting Wifi: ");
@@ -83,14 +89,17 @@ void setup() {
   analogWrite(D2_RED, 0);
 
   bool toggle = true;
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED)
+  {
     Serial.print(".");
 
-    if (toggle == true) {
+    if (toggle == true)
+    {
       analogWrite(D1_BLUE, MAX_ANALOG);
       analogWrite(D2_BLUE, 0);
     }
-    else {
+    else
+    {
       analogWrite(D1_BLUE, 0);
       analogWrite(D2_BLUE, MAX_ANALOG);
     }
@@ -113,131 +122,196 @@ void setup() {
   ledsOff();
 }
 
-void loop() {
-  if (millis() > Bot_lasttime + Bot_mtbs)  {
+void loop()
+{
+  if (millis() > Bot_lasttime + Bot_mtbs)
+  {
     int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
 
-    while (numNewMessages) {
+    while (numNewMessages)
+    {
       analogWrite(D1_BLUE, MAX_ANALOG);
       analogWrite(D2_BLUE, MAX_ANALOG);
       delay(100);
       Serial.println("got response");
       analogWrite(D1_BLUE, 0);
-      analogWrite(D2_BLUE, 0);      
+      analogWrite(D2_BLUE, 0);
       handleNewMessages(numNewMessages);
-      numNewMessages = bot.getUpdates(bot.last_message_received + 1);      
+      numNewMessages = bot.getUpdates(bot.last_message_received + 1);
     }
 
     Bot_lasttime = millis();
   }
 }
 
-void handleNewMessages(int numNewMessages) {
+void handleNewMessages(int numNewMessages)
+{
   Serial.println("handleNewMessages");
   Serial.println(String(numNewMessages));
 
-  for (int i = 0; i < numNewMessages; i++) {
+  for (int i = 0; i < numNewMessages; i++)
+  {
     String chat_id = String(bot.messages[i].chat_id);
     String text = bot.messages[i].text;
 
     String from_name = bot.messages[i].from_name;
-    if (from_name == "") from_name = "Guest";
+    if (from_name == "")
+      from_name = "Guest";
 
-    if (text == "/hello" || text == "/start") {
-      String welcome = "Welcome to Universal Arduino Telegram Bot library, " + from_name + ".\n";
-      welcome += "This is Chat Action Bot example.\n\n";
-      welcome += "/send_test_action : to send test chat action message\n";
+    if (text == "/hello" || text == "/start")
+    {
+      String welcome = "Welcome to the Dad Status Indicator, " + from_name + ".\n";
       bot.sendMessage(chat_id, welcome);
     }
 
-    else if (text == "/meetingon" || text == "/1on") {
+    else if (text == "/meetingon" || text == "/1on")
+    {
+      isIdle = false;
+      isInMeeting = true;
       String msg = "Received message " + text + " from " + from_name + ".\n";
       bot.sendChatAction(chat_id, "typing");
       bot.sendMessage(chat_id, msg);
       analogWrite(D1_RED, MAX_ANALOG);
     }
 
-    else if (text == "/meetingoff" || text == "/1off") {
+    else if (text == "/meetingoff" || text == "/1off")
+    {
+      isInMeeting = false;
+      if (!hasHeadPhonesOn)
+      {
+        isIdle = true;
+      }
       String msg = "Received message " + text + " from " + from_name + ".\n";
       bot.sendChatAction(chat_id, "typing");
       bot.sendMessage(chat_id, msg);
       analogWrite(D1_RED, 0);
     }
 
-    else if (text == "/headphoneson" || text == "/2on") {
+    else if (text == "/headphoneson" || text == "/2on")
+    {
+      hasHeadPhonesOn = true;
+      isIdle = false;
       String msg = "Received message " + text + " from " + from_name + ".\n";
       bot.sendChatAction(chat_id, "typing");
       bot.sendMessage(chat_id, msg);
       analogWrite(D2_GREEN, MAX_ANALOG);
     }
 
-    else if (text == "/headphonesoff" || text == "/2off") {
+    else if (text == "/headphonesoff" || text == "/2off")
+    {
+      hasHeadPhonesOn = false;
+      if (!isInMeeting)
+      {
+        isIdle = true;
+      }
       String msg = "Received message " + text + " from " + from_name + ".\n";
       bot.sendChatAction(chat_id, "typing");
       bot.sendMessage(chat_id, msg);
       analogWrite(D2_GREEN, 0);
     }
 
-    
-    else if (text == "/rainbow") {
+    else if (text == "/rainbow")
+    {
       String msg = "Received message " + text + " from " + from_name + ".\n";
       bot.sendChatAction(chat_id, "typing");
       bot.sendMessage(chat_id, msg);
 
-      setColor(MAX_ANALOG, 0, 0);    // red
-      setColor(0, MAX_ANALOG, 0);    // green
-      setColor(0, 0, MAX_ANALOG);    // blue
-      setColor(MAX_ANALOG, MAX_ANALOG, 0);  // yellow
-      setColor(320, 0, 320);    // purple
-      setColor(0, MAX_ANALOG, MAX_ANALOG);  // aqua
+      setColor(MAX_ANALOG, 0, 0);          // red
+      setColor(0, MAX_ANALOG, 0);          // green
+      setColor(0, 0, MAX_ANALOG);          // blue
+      setColor(MAX_ANALOG, MAX_ANALOG, 0); // yellow
+      setColor(320, 0, 320);               // purple
+      setColor(0, MAX_ANALOG, MAX_ANALOG); // aqua
       ledsOff();
     }
 
-    else if (text == "/off") {
+    else if (text == "/on")
+    {
+      isIdle = false;
+      isInMeeting = true;
+      hasHeadPhonesOn = true;
+      analogWrite(D1_RED, MAX_ANALOG);
+      analogWrite(D2_GREEN, MAX_ANALOG);
       String msg = "Received message " + text + " from " + from_name + ".\n";
       bot.sendChatAction(chat_id, "typing");
       bot.sendMessage(chat_id, msg);
-      ledsOff();
     }
 
-    else {
+    else if (text == "/off")
+    {
+      isInMeeting = false;
+      hasHeadPhonesOn = false;
+      ledsOff();
+      String msg = "Received message " + text + " from " + from_name + ".\n";
+      bot.sendChatAction(chat_id, "typing");
+      bot.sendMessage(chat_id, msg);
+    }
+
+    else
+    {
       String msg = "Received message " + text + " from " + from_name + ".\n";
       msg += "Don\'t know what to do...\n";
       bot.sendChatAction(chat_id, "typing");
       bot.sendMessage(chat_id, msg);
-      ledsOff();
     }
-  }  
+
+    sendStatusMessage(chat_id);
+  }
 }
 
-void setColor(int red, int green, int blue) {
-  while ( r != red || g != green || b != blue ) {
-    if ( r < red ) r += 1;
-    if ( r > red ) r -= 1;
+void sendStatusMessage(String chat_id)
+{
+  String idleStatus = isIdle ? "yes" : "no";
+  String hasHeadPhonesOnStatus = hasHeadPhonesOn ? "yes" : "no";
+  String isInMeetingStatus = isInMeeting ? "yes" : "no";
 
-    if ( g < green ) g += 1;
-    if ( g > green ) g -= 1;
+  String msg = "Status:\n";
+  msg += "isIdle: " + idleStatus + "\n";
+  msg += "isInMeeting: " + isInMeetingStatus + "\n";
+  msg += "hasHeadPhonesOn: " + hasHeadPhonesOnStatus + "\n";
+  bot.sendChatAction(chat_id, "typing");
+  bot.sendMessage(chat_id, msg);
+}
 
-    if ( b < blue ) b += 1;
-    if ( b > blue ) b -= 1;
-     
+void setColor(int red, int green, int blue)
+{
+  while (r != red || g != green || b != blue)
+  {
+    if (r < red)
+      r += 1;
+    if (r > red)
+      r -= 1;
+
+    if (g < green)
+      g += 1;
+    if (g > green)
+      g -= 1;
+
+    if (b < blue)
+      b += 1;
+    if (b > blue)
+      b -= 1;
+
     _setColor();
     delay(10);
   }
 }
 
-void ledsOff() {
+void ledsOff()
+{
   r = 0;
   g = 0;
   b = 0;
   _setColor();
+  isIdle = true;
 }
 
-void _setColor() {
+void _setColor()
+{
   analogWrite(D1_RED, r);
   analogWrite(D2_RED, r);
   analogWrite(D1_GREEN, g);
   analogWrite(D2_GREEN, g);
-  analogWrite(D1_BLUE, b); 
-  analogWrite(D2_BLUE, b); 
+  analogWrite(D1_BLUE, b);
+  analogWrite(D2_BLUE, b);
 }
