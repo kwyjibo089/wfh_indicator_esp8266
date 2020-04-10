@@ -30,7 +30,9 @@ UniversalTelegramBot bot(BOTtoken, client);
 int Bot_mtbs = 1000; //mean time between scan messages
 long Bot_lasttime;   //last time messages' scan has been done
 
-int watchdogtime = 5000;
+int watchDogTime = 5000;
+long lastWatchDogTime;
+
 bool isIdle = false;
 bool isInMeeting = false;
 bool hasHeadPhonesOn = false;
@@ -142,6 +144,22 @@ void loop()
 
     Bot_lasttime = millis();
   }
+
+  if (millis() > lastWatchDogTime + watchDogTime)
+  {
+    if(isIdle)
+    {
+      // if it's idle we blink once in 5 sec to prevent powerbank to shut off
+      analogWrite(D1_GREEN, MAX_ANALOG);
+      analogWrite(D2_BLUE, MAX_ANALOG);
+      delay(100);
+      analogWrite(D1_GREEN, 0);
+      analogWrite(D2_BLUE, 0);      
+    }
+
+    lastWatchDogTime = millis();
+  }
+
 }
 
 void handleNewMessages(int numNewMessages)
