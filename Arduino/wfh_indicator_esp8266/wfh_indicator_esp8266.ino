@@ -14,8 +14,18 @@
 *************************************************************************************************************************/
 #include "secrets.h"
 #include <ESP8266WiFi.h>
+
+#include <ESP8266mDNS.h>
+#include <ESP8266WebServer.h>   // Include the WebServer library
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
+
+
+ESP8266WebServer server(80);    
+
+void handleRoot();              
+void handleNotFound();
+
 
 // Initialize Wifi connection to the router
 char ssid[] = SECRET_SSID;     // your network SSID (name)
@@ -120,12 +130,28 @@ void setup()
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
+  if (MDNS.begin("esp8266")) {              // Start the mDNS responder for esp8266.local
+    Serial.println("mDNS responder started");
+  } else {
+    Serial.println("Error setting up MDNS responder!");
+  }
+
+  server.on("/", handleRoot);               // Call the 'handleRoot' function when a client requests URI "/"
+  server.onNotFound(handleNotFound);        // When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound"
+  // server.on("/status", HTTP_GET, handleGetStatus);
+  // server.on("/status", HTTP_POST, handlePostStatus);
+
+  server.begin();                           // Actually start the server
+  Serial.println("HTTP server started");
+
   delay(2000);
   ledsOff();
 }
 
 void loop()
 {
+  server.handleClient();                    // Listen for HTTP requests from clients
+
   if (millis() > Bot_lasttime + Bot_mtbs)
   {
     int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
@@ -276,7 +302,7 @@ void handleNewMessages(int numNewMessages)
   }
 }
 
-void sendStatusMessage(String chat_id)
+String getStatusMessage()
 {
   String idleStatus = isIdle ? "yes" : "no";
   String hasHeadPhonesOnStatus = hasHeadPhonesOn ? "yes" : "no";
@@ -286,6 +312,11 @@ void sendStatusMessage(String chat_id)
   msg += "isIdle: " + idleStatus + "\n";
   msg += "isInMeeting: " + isInMeetingStatus + "\n";
   msg += "hasHeadPhonesOn: " + hasHeadPhonesOnStatus + "\n";
+}
+
+void sendStatusMessage(String chat_id)
+{
+  String msg = getStatusMessage();
   bot.sendChatAction(chat_id, "typing");
   bot.sendMessage(chat_id, msg);
 }
@@ -334,3 +365,22 @@ void _setColor()
   analogWrite(D1_BLUE, b);
   analogWrite(D2_BLUE, b);
 }
+
+void handleRoot() {
+  server.send(200, "text/plain", "Hello, this the Dad Status Indicator!");   // Send HTTP status 200 (Ok) and send some text to the browser/client
+}
+
+void handleNotFound(){
+  server.send(404, "text/plain", "404: Not found"); // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
+}
+
+// void handleGetStatus(){
+//   String msg = getStatusMessage();
+//   server.send(200, "text/plain", msg); 
+// }
+
+// void handlePostStatus(){
+//   server.send(200, "text/plain", "Status updated");
+// }
+
+

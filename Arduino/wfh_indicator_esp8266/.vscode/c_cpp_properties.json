@@ -6,7 +6,7 @@
                 "C:\\Users\\roman\\AppData\\Local\\Arduino15\\packages\\esp8266\\tools\\**",
                 "C:\\Users\\roman\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.6.3\\**",
                 "C:\\Users\\roman\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.6.3\\libraries\\ESP8266WiFi\\src",
-                "C:\\Users\\roman\\OneDrive\\Documents\\Arduino\\libraries"
+                "C:\\Users\\roman\\OneDrive\\Documents\\Arduino\\libraries\\**"
             ],
             "forcedInclude": [],
             "intelliSenseMode": "msvc-x64"
